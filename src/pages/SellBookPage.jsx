@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Input, Textarea, Select, Radio, Button } from 'hero-ui'; // Adjust import according to the actual HeroUI path
-import { useHistory } from 'react-router-dom';
+import { Card, Input, Textarea, Select, Radio, Button } from '@heroui/react';
+import { useNavigate } from 'react-router-dom';
 
 const SellBookPage = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -32,7 +32,7 @@ const SellBookPage = () => {
     // Add validation logic here
 
     // On successful submission, navigate to profile page
-    history.push('/profile');
+    navigate('/profile');
   };
 
   return (

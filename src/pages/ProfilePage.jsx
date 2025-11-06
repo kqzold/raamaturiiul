@@ -1,7 +1,7 @@
 // ProfilePage.jsx
 
 import React from 'react';
-import { Tabs, Tab } from 'hero-ui'; // Assuming HeroUI components are available
+import { Tabs, Tab } from '@heroui/react';
 
 const ProfilePage = () => {
     return (
