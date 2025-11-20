@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# PHP
+vendor/
+composer.phar
+*.cache
+api/config/database.local.php
