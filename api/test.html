@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaamatuRiiul API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .response {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .book-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .book-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 RaamatuRiiul API Tester</h1>
+    
+    <!-- Auth Section -->
+    <div class="section">
+        <h2>🔐 Authentication</h2>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="loginEmail" value="ivan@example.com" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="loginPassword" value="password" placeholder="Password">
+        </div>
+        <button onclick="login()">Login</button>
+        <button onclick="logout()">Logout</button>
+        <button onclick="checkAuth()">Check Auth Status</button>
+        <div id="authResponse" class="response"></div>
+    </div>
+
+    <!-- Books Section -->
+    <div class="section">
+        <h2>📚 Books</h2>
+        <button onclick="getBooks()">Get All Books</button>
+        <button onclick="getBooks('fiction')">Get Fiction Books</button>
+        <button onclick="getMyBooks()">Get My Books</button>
+        <div id="booksResponse" class="response"></div>
+        <div id="booksGrid" class="books-grid"></div>
+    </div>
+
+    <!-- Create Book Section -->
+    <div class="section">
+        <h2>➕ Create Book</h2>
+        <div class="form-group">
+            <label>Title:</label>
+            <input type="text" id="bookTitle" placeholder="Book Title">
+        </div>
+        <div class="form-group">
+            <label>Author:</label>
+            <input type="text" id="bookAuthor" placeholder="Author Name">
+        </div>
+        <div class="form-group">
+            <label>Genre:</label>
+            <input type="text" id="bookGenre" value="fiction" placeholder="Genre">
+        </div>
+        <div class="form-group">
+            <label>Condition:</label>
+            <input type="text" id="bookCondition" value="Отличное" placeholder="Condition">
+        </div>
+        <div class="form-group">
+            <label>Price:</label>
+            <input type="number" id="bookPrice" step="0.01" placeholder="Price">
+        </div>
+        <button onclick="createBook()">Create Book</button>
+        <div id="createBookResponse" class="response"></div>
+    </div>
+
+    <!-- Cart Section -->
+    <div class="section">
+        <h2>🛒 Cart</h2>
+        <div class="form-group">
+            <label>Book ID to add:</label>
+            <input type="number" id="cartBookId" placeholder="Book ID">
+        </div>
+        <button onclick="addToCart()">Add to Cart</button>
+        <button onclick="getCart()">View Cart</button>
+        <button onclick="clearCart()">Clear Cart</button>
+        <div id="cartResponse" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/index.php';
+        
+        async function apiRequest(endpoint, action, method = 'GET', body = null) {
+            const url = `${API_BASE}?endpoint=${endpoint}&action=${action}`;
+            const options = {
+                method: method,
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                return { success: false, message: error.message };
+            }
+        }
+
+        function displayResponse(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = 'response ' + (data.success ? 'success' : 'error');
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const result = await apiRequest('auth', 'login', 'POST', { email, password });
+            displayResponse('authResponse', result);
+        }
+
+        async function logout() {
+            const result = await apiRequest('auth', 'logout', 'POST');
+            displayResponse('authResponse', result);
+        }
+
+        async function checkAuth() {
+            const result = await apiRequest('auth', 'check');
+            displayResponse('authResponse', result);
+        }
+
+        async function getBooks(genre = 'all') {
+            const url = `${API_BASE}?endpoint=books&action=list&genre=${genre}`;
+            const response = await fetch(url, { credentials: 'include' });
+            const result = await response.json();
+            displayResponse('booksResponse', result);
+            
+            // Display books in grid
+            if (result.success && result.data) {
+                const grid = document.getElementById('booksGrid');
+                grid.innerHTML = result.data.map(book => `
+                    <div class="book-card">
+                        <img src="${book.image}" alt="${book.title}">
+                        <h3>${book.title}</h3>
+                        <p>${book.author}</p>
+                        <p><strong>${book.price} €</strong></p>
+                        <p>Rating: ⭐ ${book.rating}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function getMyBooks() {
+            const result = await apiRequest('books', 'my-books');
+            displayResponse('booksResponse', result);
+        }
+
+        async function createBook() {
+            const bookData = {
+                title: document.getElementById('bookTitle').value,
+                author: document.getElementById('bookAuthor').value,
+                genre: document.getElementById('bookGenre').value,
+                condition: document.getElementById('bookCondition').value,
+                price: parseFloat(document.getElementById('bookPrice').value)
+            };
+            const result = await apiRequest('books', 'create', 'POST', bookData);
+            displayResponse('createBookResponse', result);
+        }
+
+        async function addToCart() {
+            const bookId = document.getElementById('cartBookId').value;
+            const result = await apiRequest('cart', 'add', 'POST', { book_id: parseInt(bookId) });
+            displayResponse('cartResponse', result);
+        }
+
+        async function getCart() {
+            const result = await apiRequest('cart', 'list');
+            displayResponse('cartResponse', result);
+        }
+
+        async function clearCart() {
+            const result = await apiRequest('cart', 'clear', 'DELETE');
+            displayResponse('cartResponse', result);
+        }
+
+        // Check auth on page load
+        window.onload = () => {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>
